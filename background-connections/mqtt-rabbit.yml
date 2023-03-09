@@ -1,0 +1,39 @@
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: mqtt-rabbit-{{testid}}
+  labels:
+    mqtt: server
+spec:
+  replicas: 3
+  image: {{rabbitmq_image}}
+  persistence:
+    storageClassName: ssd
+    storage: "30Gi"
+  rabbitmq:
+    additionalPlugins:
+    - rabbitmq_mqtt
+    additionalConfig: |
+      mqtt.tcp_listen_options.sndbuf = 1024
+      mqtt.tcp_listen_options.recbuf = 1024
+      mqtt.tcp_listen_options.buffer = 1024
+      mqtt.tcp_listen_options.backlog = 512
+      mqtt.tcp_listen_options.nodelay = true
+      vm_memory_high_watermark.relative = 0.95
+      vm_memory_high_watermark_paging_ratio = 0.95
+      disk_free_limit.absolute = 200MB
+      classic_queue.default_version = 2
+      management_agent.disable_metrics_collector = true
+      log.console = true
+      log.console.level = warning
+    envConfig: |
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+P 40000000 +zdbbl 1000000 -mnesia dump_log_write_threshold 50000 +S 20:20 +SDcpu 10:10 +SDio 15"
+      ERL_MAX_PORTS=5000000
+  resources:
+    requests:
+      memory: 170Gi
+      cpu: 20
+    limits:
+      memory: 170Gi
+      cpu: 20

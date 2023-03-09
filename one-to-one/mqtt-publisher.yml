@@ -1,0 +1,52 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mqtt-publisher-{{testid}}-{{podindex}}
+  labels:
+    mqtt: bench
+spec:
+  backoffLimit: 1
+  completions: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: bench
+        image: emqx/emqtt-bench:0.4.11
+        args:
+         - "pub"
+         - "--count=25000"
+         - "--topic=pod-{{podindex}}/%i"
+         - "--qos=0"
+         - "--size=64"
+         - "--interval=20" # in milliseconds
+         - "--interval_of_msg=120000" # in milliseconds
+         - "--keepalive=600" # in seconds
+         - "--prefix=pod_{{podindex}}" # client ID: 'pod_$podindex_bench_pub_%i'
+         - "--lowmem"
+         - "--num-retry-connect=5"
+         - "--version=4"
+         - "--host=$(RABBITMQ_SERVICE)"
+         - "--username=$(RABBITMQ_USER)"
+         - "--password=$(RABBITMQ_PASS)"
+        env:
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: mqtt-rabbit-{{testid}}-default-user
+              key: username
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mqtt-rabbit-{{testid}}-default-user
+              key: password
+        - name: RABBITMQ_SERVICE
+          value: mqtt-rabbit-{{testid}}
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 0.4
+          limits:
+            memory: 3.5Gi
+            cpu: 0.6
