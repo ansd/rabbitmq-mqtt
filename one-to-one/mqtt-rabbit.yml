@@ -24,6 +24,7 @@ spec:
       disk_free_limit.absolute = 200MB
       classic_queue.default_version = 2
       management_agent.disable_metrics_collector = true
+      queue_master_locator = client-local
       log.console = true
       log.console.level = warning
     # msacc shows that dirty CPU schedulers are idle in `sleep` most of the time while dirty IO schedulers are busy in `nif`.
